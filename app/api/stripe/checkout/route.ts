@@ -1,13 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { stripe, PREMIUM_PRICE_ID } from "@/lib/stripe";
+import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/db";
+
+const PRICE_IDS = {
+  monthly: process.env.STRIPE_PRICE_ID_MONTHLY ?? process.env.STRIPE_PRICE_ID!,
+  yearly: process.env.STRIPE_PRICE_ID_YEARLY ?? process.env.STRIPE_PRICE_ID!,
+};
 
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.email) {
     return NextResponse.json({ error: "Nicht angemeldet" }, { status: 401 });
   }
+
+  const body = await req.json().catch(() => ({}));
+  const billing: "monthly" | "yearly" = body.billing === "yearly" ? "yearly" : "monthly";
 
   const user = await prisma.user.findUnique({ where: { email: session.user.email } });
   if (!user) return NextResponse.json({ error: "Benutzer nicht gefunden" }, { status: 404 });
@@ -27,10 +35,13 @@ export async function POST(req: NextRequest) {
   const checkoutSession = await stripe.checkout.sessions.create({
     customer: customerId,
     mode: "subscription",
-    line_items: [{ price: PREMIUM_PRICE_ID, quantity: 1 }],
+    line_items: [{ price: PRICE_IDS[billing], quantity: 1 }],
     success_url: `${origin}/profil?premium=success`,
     cancel_url: `${origin}/preise`,
     metadata: { userId: user.id },
+    subscription_data: {
+      metadata: { userId: user.id, billing },
+    },
   });
 
   return NextResponse.json({ url: checkoutSession.url });

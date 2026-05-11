@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { evaluateGuess, computeLetterStates, GameStatus, LetterState, TileStatus } from "@/lib/game";
 import { getDailyWord, getDayNumber, isValidWord } from "@/lib/words";
+import { markGamePlayed } from "@/lib/streak";
 
 const MAX_GUESSES = 6;
 const WORD_LENGTH = 5;
@@ -131,6 +132,7 @@ export function useWortle() {
             setTimeout(() => setBouncingRow(null), 1200);
           }
           if (newStatus !== "playing") {
+            markGamePlayed("wortle");
             setTimeout(() => setShowModal(true), 1000);
           }
         }, revealDuration);
