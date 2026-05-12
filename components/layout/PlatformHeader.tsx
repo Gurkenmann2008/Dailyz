@@ -9,15 +9,14 @@ import { StreakDisplay } from "@/components/StreakDisplay";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/wortle", label: "Wörtle" },
-  { href: "/quoerdle", label: "Quördle" },
+  { href: "/wortle",        label: "Wörtle" },
   { href: "/zahlenraetsel", label: "Zahlenrätsel" },
-  { href: "/verbindungen", label: "Verbindungen" },
-  { href: "/kreuzwort", label: "Kreuzwort" },
-  { href: "/wortketten", label: "Wort-Ketten" },
+  { href: "/buchstaben",    label: "Buchstaben ✨" },
+  { href: "/verbindungen",  label: "Verbindungen" },
+  { href: "/quoerdle",      label: "Quördle" },
   { href: "/stadtlandfuss", label: "Stadt-Land-Fluss" },
-  { href: "/schaetzling", label: "Schätzling" },
-  { href: "/flagge", label: "Flagge" },
+  { href: "/schaetzling",   label: "Schätzling" },
+  { href: "/flagge",        label: "Flagge" },
 ];
 
 export function PlatformHeader() {

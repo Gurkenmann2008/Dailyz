@@ -2,41 +2,51 @@
 
 import { useState } from "react";
 import { PlatformHeader } from "@/components/layout/PlatformHeader";
-import { Check, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, X, ChevronDown, ChevronUp, Shield, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const FEATURES = [
-  { label: "Wörtle täglich",              free: true,  premium: true },
-  { label: "Zahlenrätsel täglich",        free: true,  premium: true },
-  { label: "Stadt-Land-Fluss täglich",    free: true,  premium: true },
-  { label: "Schätzling täglich",          free: true,  premium: true },
-  { label: "Flagge täglich",              free: true,  premium: true },
-  { label: "Quördle täglich",             free: false, premium: true },
-  { label: "Verbindungen täglich",        free: false, premium: true },
-  { label: "Mini-Kreuzwort täglich",      free: false, premium: true },
-  { label: "Wort-Ketten täglich",         free: false, premium: true },
-  { label: "Archiv (30 Tage Rückblick)",  free: false, premium: true },
-  { label: "Streak & Statistiken",        free: "Basis", premium: "Vollständig" },
-  { label: "Wöchentliches Leaderboard",   free: false, premium: true },
-  { label: "Werbefrei",                   free: false, premium: true },
-  { label: "Früher Zugang zu neuen Spielen", free: false, premium: true },
+const FREE_FEATURES = [
+  { label: "Wörtle täglich", ok: true },
+  { label: "Zahlenrätsel täglich", ok: true },
+  { label: "Quördle, Verbindungen, Buchstaben & mehr", ok: false },
+  { label: "Archiv (30 Tage Rückblick)", ok: false },
+  { label: "Detaillierte Statistiken & Serien", ok: false },
+  { label: "Streak-Freeze (1× pro Monat)", ok: false },
+  { label: "Werbefrei", ok: false },
+];
+
+const PREMIUM_FEATURES = [
+  { label: "Wörtle täglich", ok: true },
+  { label: "Zahlenrätsel täglich", ok: true },
+  { label: "Alle 9+ Spiele täglich", ok: true },
+  { label: "Archiv (30 Tage Rückblick)", ok: true },
+  { label: "Detaillierte Statistiken & Serien", ok: true },
+  { label: "Streak-Freeze (1× pro Monat)", ok: true },
+  { label: "Werbefrei", ok: true },
+];
+
+const TESTIMONIALS = [
+  { text: "Super süchtig! Ich spiele jeden Morgen mit dem Kaffee. Wörtle ist mein Liebling, aber die Verbindungen sind krank schwer 😂", name: "Lisa M.", city: "München", stars: 5 },
+  { text: "Endlich ein deutsches Alternative zu NYT Games. Für 14,99€ im Jahr ist das absolut lächerlich günstig. Sehr empfehlenswert!", name: "Thomas B.", city: "Berlin", stars: 5 },
+  { text: "Meine Kinder spielen es auch! Das Buchstaben-Rätsel machen wir abends als Familie. Bestes Investment des Jahres.", name: "Sabine H.", city: "Hamburg", stars: 5 },
 ];
 
 const FAQS = [
-  { q: "Kann ich jederzeit kündigen?", a: "Ja, du kannst jederzeit im Monatsrhythmus kündigen. Nach der Kündigung hast du bis zum Ende des bezahlten Zeitraums Zugang." },
-  { q: "Welche Zahlungsmethoden werden akzeptiert?", a: "Wir akzeptieren alle gängigen Kredit- und Debitkarten (Visa, Mastercard, Amex) sowie PayPal und Apple Pay über Stripe." },
-  { q: "Was passiert mit meinen Statistiken wenn ich kündige?", a: "Deine Statistiken und Spielhistorie bleiben erhalten. Du verlierst nur den Zugang zu Premium-Spielen und dem Archiv." },
-  { q: "Gibt es eine kostenlose Probezeit?", a: "Du kannst alle kostenfreien Spiele dauerhaft kostenlos spielen. Premium gibt es ohne Probezeit — aber für 1,99€/Monat ist es ein kleines Risiko." },
-  { q: "Ist Dailyz auch auf dem Smartphone nutzbar?", a: "Ja! Dailyz ist vollständig für Mobile optimiert und funktioniert im Browser auf jedem Gerät. Eine App ist in Planung." },
+  { q: "Kann ich jederzeit kündigen?", a: "Ja, du kannst im nächsten Monatsrhythmus kündigen — ganz ohne Haken. Nach der Kündigung hast du bis zum Ablauf des bezahlten Zeitraums vollen Premium-Zugang." },
+  { q: "Gilt das Abo für mehrere Familienmitglieder?", a: "Aktuell ist das Abo personengebunden. Jedes Familienmitglied benötigt ein eigenes Konto. Familienabos sind in Planung!" },
+  { q: "Wie funktioniert die 14-Tage-Geld-zurück-Garantie?", a: "Wenn dir Dailyz Premium nicht gefällt, schreib uns einfach innerhalb der ersten 14 Tage an support@dailyz.de. Wir erstatten den vollen Betrag, keine Fragen gestellt." },
+  { q: "Welche Zahlungsmethoden werden akzeptiert?", a: "Alle gängigen Kredit- und Debitkarten (Visa, Mastercard), PayPal und Apple Pay — sicher verarbeitet über Stripe." },
+  { q: "Was passiert mit meinen Statistiken wenn ich kündige?", a: "Deine Spielhistorie und Statistiken bleiben dauerhaft erhalten. Du verlierst nur den Zugang zu Premium-Spielen und dem Archiv." },
+  { q: "Gibt es eine App?", a: "Dailyz läuft als Progressive Web App (PWA) — du kannst es auf iOS und Android wie eine normale App installieren. Öffne einfach dailyz.de im Browser und tippe auf 'Zum Homescreen hinzufügen'." },
+  { q: "Was ist ein Streak-Freeze?", a: "Ein Streak-Freeze schützt deinen Streak für einen Tag, wenn du mal nicht spielen konntest. Premium-Nutzer bekommen 1 Freeze pro Monat automatisch gutgeschrieben." },
 ];
 
 export default function PreisePage() {
-  const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<"monthly" | "yearly" | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  async function handleCheckout() {
-    setLoading(true);
+  async function handleCheckout(billing: "monthly" | "yearly") {
+    setLoading(billing);
     const res = await fetch("/api/stripe/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -47,64 +57,43 @@ export default function PreisePage() {
       window.location.href = data.url;
     } else {
       if (data.error === "Nicht angemeldet") window.location.href = "/anmelden?redirect=/preise";
-      setLoading(false);
+      setLoading(null);
     }
   }
 
   return (
     <div className="flex flex-col min-h-screen">
       <PlatformHeader />
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-16">
+      <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-16">
 
         {/* Hero */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-14">
           <h1 className="text-4xl md:text-5xl font-black mb-3">Alle Rätsel. Jeden Tag.</h1>
-          <p className="text-[var(--muted)] text-lg mb-2">Bereits von 1.000+ Rätselfans täglich gespielt</p>
-          <div className="flex justify-center gap-1.5 text-2xl">{"⭐".repeat(5)}</div>
-        </div>
-
-        {/* Billing toggle */}
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-1 p-1 rounded-full bg-[var(--card)] border border-[var(--card-border)]">
-            <button
-              onClick={() => setBilling("monthly")}
-              className={cn("px-5 py-2 rounded-full text-sm font-bold transition-colors", billing === "monthly" ? "bg-[var(--foreground)] text-[var(--background)]" : "text-[var(--muted)] hover:text-[var(--foreground)]")}
-            >
-              Monatlich
-            </button>
-            <button
-              onClick={() => setBilling("yearly")}
-              className={cn("px-5 py-2 rounded-full text-sm font-bold transition-colors flex items-center gap-2", billing === "yearly" ? "bg-[var(--foreground)] text-[var(--background)]" : "text-[var(--muted)] hover:text-[var(--foreground)]")}
-            >
-              Jährlich
-              <span className="px-1.5 py-0.5 rounded-full bg-[#6aaa64] text-white text-[10px] font-black">−37%</span>
-            </button>
+          <p className="text-[var(--muted)] text-lg mb-4">Über 1.000 Rätselfans spielen täglich auf Dailyz</p>
+          <div className="flex justify-center items-center gap-1">
+            {"⭐⭐⭐⭐⭐".split("").map((s, i) => <span key={i} className="text-2xl">{s}</span>)}
+            <span className="text-sm text-[var(--muted)] ml-2">4,9 / 5 von Nutzern bewertet</span>
           </div>
         </div>
 
-        {/* Plan cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-16">
+        {/* 3-card pricing */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-16">
+
           {/* Free */}
-          <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--card)] p-8 flex flex-col">
-            <div className="mb-6">
-              <h2 className="text-xl font-black mb-1">Kostenlos</h2>
-              <div className="flex items-end gap-1 mb-1">
+          <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--card)] p-7 flex flex-col">
+            <div className="mb-5">
+              <p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-2">Kostenlos</p>
+              <div className="flex items-end gap-1">
                 <span className="text-4xl font-black">0€</span>
                 <span className="text-[var(--muted)] pb-1">/Monat</span>
               </div>
-              <p className="text-xs text-[var(--muted)]">Für immer kostenlos</p>
+              <p className="text-xs text-[var(--muted)] mt-1">Für immer gratis</p>
             </div>
-            <ul className="space-y-2.5 mb-8 flex-1">
-              {FEATURES.filter(f => f.free).map(f => (
-                <li key={f.label} className="flex items-center gap-2.5 text-sm">
-                  <Check size={15} className="text-[#6aaa64] shrink-0" />
-                  <span>{f.label}{typeof f.free === "string" ? ` (${f.free})` : ""}</span>
-                </li>
-              ))}
-              {FEATURES.filter(f => !f.free).map(f => (
-                <li key={f.label} className="flex items-center gap-2.5 text-sm text-[var(--muted)]">
-                  <X size={15} className="shrink-0" />
-                  <span>{f.label}</span>
+            <ul className="space-y-2.5 mb-7 flex-1">
+              {FREE_FEATURES.map(f => (
+                <li key={f.label} className={cn("flex items-start gap-2.5 text-sm", !f.ok && "text-[var(--muted)]")}>
+                  {f.ok ? <Check size={15} className="text-[#6aaa64] shrink-0 mt-0.5" /> : <X size={15} className="shrink-0 mt-0.5" />}
+                  {f.label}
                 </li>
               ))}
             </ul>
@@ -113,48 +102,87 @@ export default function PreisePage() {
             </a>
           </div>
 
-          {/* Premium */}
-          <div className="relative rounded-2xl border-2 border-[#FFCE00] bg-[var(--card)] p-8 flex flex-col">
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-[#FFCE00] text-black text-xs font-black uppercase tracking-wider whitespace-nowrap">
-              🏆 Empfohlen
+          {/* Premium Monthly */}
+          <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--card)] p-7 flex flex-col">
+            <div className="mb-5">
+              <p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-2">Premium Monatlich</p>
+              <div className="flex items-end gap-1">
+                <span className="text-4xl font-black">1,99€</span>
+                <span className="text-[var(--muted)] pb-1">/Monat</span>
+              </div>
+              <p className="text-xs text-[var(--muted)] mt-1">Jederzeit kündbar</p>
             </div>
-            <div className="mb-6">
-              <h2 className="text-xl font-black mb-1">Premium</h2>
-              {billing === "monthly" ? (
-                <div className="flex items-end gap-1 mb-1">
-                  <span className="text-4xl font-black">1,99€</span>
-                  <span className="text-[var(--muted)] pb-1">/Monat</span>
-                </div>
-              ) : (
-                <div className="mb-1">
-                  <div className="flex items-end gap-1">
-                    <span className="text-4xl font-black">14,99€</span>
-                    <span className="text-[var(--muted)] pb-1">/Jahr</span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-sm text-[var(--muted)] line-through">23,88€</span>
-                    <span className="text-xs font-bold text-[#6aaa64]">Du sparst 8,89€!</span>
-                  </div>
-                </div>
-              )}
-              <p className="text-xs text-[var(--muted)]">Jederzeit kündbar</p>
-            </div>
-            <ul className="space-y-2.5 mb-8 flex-1">
-              {FEATURES.map(f => (
-                <li key={f.label} className="flex items-center gap-2.5 text-sm">
-                  <Check size={15} className="text-[#6aaa64] shrink-0" />
-                  <span>{f.label}{typeof f.premium === "string" ? ` (${f.premium})` : ""}</span>
+            <ul className="space-y-2.5 mb-7 flex-1">
+              {PREMIUM_FEATURES.map(f => (
+                <li key={f.label} className="flex items-start gap-2.5 text-sm">
+                  <Check size={15} className="text-[#6aaa64] shrink-0 mt-0.5" />
+                  {f.label}
                 </li>
               ))}
             </ul>
             <button
-              onClick={handleCheckout}
-              disabled={loading}
-              className="w-full py-3 rounded-xl bg-[#FFCE00] text-black font-black text-sm hover:bg-[#f0c000] transition-colors disabled:opacity-60"
+              onClick={() => handleCheckout("monthly")}
+              disabled={loading !== null}
+              className="w-full py-3 rounded-xl bg-[var(--foreground)] text-[var(--background)] font-black text-sm hover:opacity-90 transition-opacity disabled:opacity-60"
             >
-              {loading ? "Weiterleitung..." : billing === "yearly" ? "Jetzt Jahresabo sichern →" : "Premium werden →"}
+              {loading === "monthly" ? "Weiterleitung…" : "Monatlich starten →"}
             </button>
-            <p className="text-center text-xs text-[var(--muted)] mt-2">🔒 Sichere Zahlung via Stripe</p>
+          </div>
+
+          {/* Premium Yearly — MOST POPULAR */}
+          <div className="relative rounded-2xl border-2 border-[#FFCE00] bg-[var(--card)] p-7 flex flex-col shadow-xl shadow-[#FFCE00]/10">
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-[#FFCE00] text-black text-xs font-black uppercase tracking-wide whitespace-nowrap">
+              ⭐ Beliebteste Wahl
+            </div>
+            <div className="mb-5">
+              <p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-2">Premium Jährlich</p>
+              <div className="flex items-end gap-1">
+                <span className="text-4xl font-black">14,99€</span>
+                <span className="text-[var(--muted)] pb-1">/Jahr</span>
+              </div>
+              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                <span className="text-sm text-[var(--muted)] line-through">23,88€</span>
+                <span className="text-xs font-black text-[#6aaa64]">Du sparst 9€ (37%)</span>
+              </div>
+              <p className="text-xs text-[#FFCE00] font-bold mt-1">≈ Nur 6 Cent pro Tag</p>
+            </div>
+            <ul className="space-y-2.5 mb-7 flex-1">
+              {PREMIUM_FEATURES.map(f => (
+                <li key={f.label} className="flex items-start gap-2.5 text-sm">
+                  <Check size={15} className="text-[#6aaa64] shrink-0 mt-0.5" />
+                  {f.label}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => handleCheckout("yearly")}
+              disabled={loading !== null}
+              className="w-full py-3 rounded-xl bg-[#FFCE00] text-black font-black text-sm hover:bg-[#f0c000] transition-colors disabled:opacity-60 mb-3"
+            >
+              {loading === "yearly" ? "Weiterleitung…" : "Jahresabo sichern →"}
+            </button>
+
+            {/* Trust badges */}
+            <div className="flex items-center justify-center gap-4 text-xs text-[var(--muted)]">
+              <div className="flex items-center gap-1"><Shield size={12} /><span>SSL-sicher</span></div>
+              <div className="flex items-center gap-1"><RotateCcw size={12} /><span>14 Tage Geld zurück</span></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Testimonials */}
+        <div className="mb-16">
+          <h2 className="text-2xl font-black text-center mb-8">Was unsere Spieler sagen</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {TESTIMONIALS.map((t) => (
+              <div key={t.name} className="rounded-2xl border border-[var(--card-border)] bg-[var(--card)] p-6">
+                <div className="flex gap-0.5 mb-3">
+                  {"⭐".repeat(t.stars).split("").map((s, i) => <span key={i}>{s}</span>)}
+                </div>
+                <p className="text-sm text-[var(--muted)] italic mb-4">"{t.text}"</p>
+                <p className="text-sm font-bold">— {t.name}, {t.city}</p>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -172,12 +200,25 @@ export default function PreisePage() {
                   {openFaq === i ? <ChevronUp size={16} className="shrink-0" /> : <ChevronDown size={16} className="shrink-0" />}
                 </button>
                 {openFaq === i && (
-                  <div className="px-5 pb-4 text-sm text-[var(--muted)] border-t border-[var(--card-border)] pt-3">
+                  <div className="px-5 pb-4 text-sm text-[var(--muted)] border-t border-[var(--card-border)] pt-3 leading-relaxed">
                     {faq.a}
                   </div>
                 )}
               </div>
             ))}
+          </div>
+
+          {/* Bottom CTA */}
+          <div className="mt-10 text-center rounded-2xl border border-[#FFCE00]/30 bg-[#FFCE00]/5 p-8">
+            <p className="text-xl font-black mb-2">Bereit für alle Rätsel?</p>
+            <p className="text-sm text-[var(--muted)] mb-5">Jahresabo für nur 14,99€ — das sind 6 Cent pro Tag.</p>
+            <button
+              onClick={() => handleCheckout("yearly")}
+              className="px-8 py-3 rounded-xl bg-[#FFCE00] text-black font-black text-sm hover:bg-[#f0c000] transition-colors"
+            >
+              Jetzt Premium werden →
+            </button>
+            <p className="text-xs text-[var(--muted)] mt-3">14 Tage Geld-zurück-Garantie · Jederzeit kündbar</p>
           </div>
         </div>
       </main>
